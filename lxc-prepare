@@ -1,0 +1,193 @@
+#!/bin/bash
+
+release=testing
+hostname=vm0
+arch=i386
+
+cache=/var/cache/lxc
+lib=/var/lib/lxc
+
+. /etc/lxc/packages
+
+check_args() 
+{
+    if [ ! -z $1 ]; then release=$1; fi
+    if [ ! -z $2 ]; then hostname=$2; fi
+}
+
+download() 
+{
+    if [ ! -e "$cache/debian-$release-$arch.tar" ]; then
+        debootstrap --verbose --arch=$arch \
+          --make-tarball="$cache/debian-$release-$arch.tar" \
+          --include $packages --variant=minbase \
+          $release "$cache/$release-$arch"
+        if [ $? -ne 0 ]; then
+           exit 1
+        fi
+    else
+        echo "There is '$cache/debian-$release-$arch.tar'... skipping download."
+    fi
+}
+
+install() 
+{
+    if [ ! -d "$lib/$hostname/rootfs" ]; then
+        debootstrap --verbose --arch=$arch \
+          --unpack-tarball="$cache/debian-$release-$arch.tar" \
+          --include $packages --variant=minbase \
+          $release "$lib/$hostname/rootfs"
+        if [ $? -ne 0 ]; then
+           exit 1
+        fi
+    else
+        echo "There is '$lib/$hostname'... skipping install."
+    fi
+}
+
+configure()
+{
+    rootfs=$lib/$hostname/rootfs
+
+    mkdir -p $rootfs/selinux
+    echo 0 > $rootfs/selinux/enforce
+
+    if [ -f "$HOME/.ssh/id_rsa.pub" ]; then
+        mkdir -p $rootfs/root/.ssh
+        cp ~/.ssh/id_rsa.pub "$rootfs/root/.ssh/authorized_keys"
+    fi
+
+    cat <<EOF > $rootfs/etc/inittab
+id:3:initdefault:
+si::sysinit:/etc/init.d/rcS
+l0:0:wait:/etc/init.d/rc 0
+l1:1:wait:/etc/init.d/rc 1
+l2:2:wait:/etc/init.d/rc 2
+l3:3:wait:/etc/init.d/rc 3
+l4:4:wait:/etc/init.d/rc 4
+l5:5:wait:/etc/init.d/rc 5
+l6:6:wait:/etc/init.d/rc 6
+# Normally not reached, but fallthrough in case of emergency.
+z6:6:respawn:/sbin/sulogin
+1:2345:respawn:/sbin/getty 38400 console
+c1:12345:respawn:/sbin/getty 38400 tty1 linux
+c2:12345:respawn:/sbin/getty 38400 tty2 linux
+EOF
+
+    cat <<EOF >> $rootfs/etc/apt/sources.list
+deb http://security.debian.org/ $release/updates main
+EOF
+
+    cat <<EOF > $rootfs/etc/network/interfaces
+auto lo
+iface lo inet loopback
+
+auto eth0
+iface eth0 inet dhcp
+EOF
+
+    domain=`hostname -d`
+    if [ ! -z $domain ]; then
+        domain=.$domain
+    fi
+    cat <<EOF > $rootfs/etc/hostname
+$hostname$domain
+EOF
+
+    cat <<EOF >> $rootfs/etc/dhcp/dhclient.conf
+send host-name "$hostname";
+EOF
+
+    cat <<EOF > $rootfs/etc/hosts
+127.0.0.1   localhost   $hostname
+EOF
+
+    cat <<EOF > $rootfs/etc/locale.gen
+en_US.UTF-8 UTF-8
+EOF
+
+    echo net.ipv6.conf.all.disable_ipv6=1 >\
+$rootfs/etc/sysctl.d/disableipv6.conf
+
+    echo "AddressFamily inet" >>\
+$rootfs/etc/ssh/sshd_config
+
+    cp /etc/timezone $rootfs/etc/timezone
+    cp /etc/localtime $rootfs/etc/localtime
+    area=$(debconf-show tzdata | grep Areas | cut -d ' ' -f 3)
+    zone=$(debconf-show tzdata | grep Zones/${area} | cut -d ' ' -f 3)
+
+    cat <<EOF | chroot $rootfs
+mknod -m 666 /dev/tty1 c 4 1
+mknod -m 666 /dev/tty2 c 4 2
+locale-gen en_US.UTF-8
+update-locale LANG=en_US.UTF-8
+echo "tzdata tzdata/Areas select $area" | debconf-set-selections
+echo "tzdata tzdata/Zones/$area select $zone" | debconf-set-selections
+dpkg-reconfigure -u tzdata
+/usr/sbin/update-rc.d -f umountfs remove
+/usr/sbin/update-rc.d -f hwclock.sh remove
+/usr/sbin/update-rc.d -f hwclockfirst.sh remove
+apt-get update
+apt-get -y upgrade
+apt-get autoremove
+apt-get clean
+apt-get autoclean
+echo "root:root" | chpasswd
+EOF
+
+    cat <<EOF > $lib/$hostname/config
+lxc.utsname = $hostname
+lxc.tty = 4
+lxc.pts = 1024
+lxc.rootfs = $rootfs
+lxc.cgroup.devices.deny = a
+# /dev/null and zero
+lxc.cgroup.devices.allow = c 1:3 rwm
+lxc.cgroup.devices.allow = c 1:5 rwm
+# consoles
+lxc.cgroup.devices.allow = c 5:1 rwm
+lxc.cgroup.devices.allow = c 5:0 rwm
+lxc.cgroup.devices.allow = c 4:0 rwm
+lxc.cgroup.devices.allow = c 4:1 rwm
+# /dev/{,u}random
+lxc.cgroup.devices.allow = c 1:9 rwm
+lxc.cgroup.devices.allow = c 1:8 rwm
+lxc.cgroup.devices.allow = c 136:* rwm
+lxc.cgroup.devices.allow = c 5:2 rwm
+# rtc
+lxc.cgroup.devices.allow = c 254:0 rwm
+
+# mounts point
+lxc.mount.entry=proc $rootfs/proc proc nodev,noexec,nosuid 0 0
+lxc.mount.entry=devpts $rootfs/dev/pts devpts defaults 0 0
+lxc.mount.entry=sysfs $rootfs/sys sysfs defaults  0 0
+
+# network
+lxc.network.type = veth
+lxc.network.flags = up
+lxc.network.link = br0
+lxc.network.hwaddr = 00:1E:$(hex):$(hex):$(hex):$(hex)
+EOF
+}
+
+hex() 
+{
+    echo "`tr -dc A-F0-9 < /dev/urandom | head -c 2 | xargs`"
+}
+
+register()
+{
+    if [ -h /etc/lxc/$hostname.conf ]; then
+        rm /etc/lxc/$hostname.conf
+    fi
+
+    ln -s $lib/$hostname/config /etc/lxc/$hostname.conf
+}
+
+check_args $1 $2
+download
+install
+configure
+register
+
