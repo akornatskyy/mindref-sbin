@@ -7,11 +7,11 @@ deb http://security.debian.org/ testing/updates main
 EOF
 
 # Make full update/upgrade
-apt-get -qq update
-apt-get -yqq dist-upgrade
+apt-get -q update
+apt-get -yq dist-upgrade
 
 # Install packages
-apt-get -yqq install mercurial htop && apt-get clean
+apt-get -yq install mercurial htop && apt-get clean
 
 # Install bitbucket.org fingerprint
 cat <<EOF > ~/.hgrc
