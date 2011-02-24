@@ -1,0 +1,9 @@
+#!/bin/sh
+
+/bin/mount -o remount,ro /usr || \
+    echo 'Failed to remount /usr ro'
+/bin/mount -o remount,noexec /var || \
+    echo 'Failed to remount /var noexec'
+/bin/mount -o remount,noexec /tmp || \
+    echo 'Failed to remount /tmp noexec'
+
