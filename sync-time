@@ -1,0 +1,20 @@
+#!/bin/bash
+
+server=pool.ntp.org
+
+# Sleep a random amount, not greater than 2 minutes
+sleep_time=$(($RANDOM % 120))
+
+echo "Sleeping for $sleep_time seconds..."
+/bin/sleep $sleep_time
+
+# Sync the time with external server
+echo "Sync time with $server."
+/usr/sbin/ntpdate -s $server || exit 1
+
+# Adjusts clock drift
+/sbin/hwclock --adjust
+
+# Set the hardware clock to current system time
+/sbin/hwclock --systohc
+
