@@ -13,6 +13,7 @@ mv /etc/bind /var/chroot/bind9/etc
 ln -s /var/chroot/bind9/etc/bind /etc/bind
 
 chown -R bind:bind /etc/bind/*
+chmod -R g+w /etc/bind/
 
 echo "$AddUnixListenSocket /var/chroot/bind9/dev/log" > /etc/rsyslog.d/bind-chroot.conf
 
