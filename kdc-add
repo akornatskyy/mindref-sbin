@@ -1,0 +1,11 @@
+#!/bin/sh
+
+type=host
+if [ ! -z $1 ]; then type=$1; fi
+
+sh -c "`cat /etc/hostname | xargs -t -I {} echo \
+"kadmin -p admin -q \\\"addprinc -randkey $type/{}\\\""`"
+
+sh -c "`cat /etc/hostname | xargs -t -I {} echo \
+"kadmin -p admin -q \\\"ktadd $type/{}\\\""`"
+
