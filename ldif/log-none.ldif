@@ -1,0 +1,6 @@
+# Disable LDAP logging
+dn: cn=config
+changetype: modify
+replace: olcLogLevel
+olcLogLevel: none
+
