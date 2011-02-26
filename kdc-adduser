@@ -1,3 +1,3 @@
 #!/bin/sh
 
-kadmin -q "addprinc $1"
+kadmin -p admin -q "addprinc $1"
