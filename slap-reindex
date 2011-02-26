@@ -1,0 +1,7 @@
+#!/bin/sh
+
+/etc/init.d/slapd stop > /dev/null
+
+su openldap -c "slapindex"
+
+/etc/init.d/slapd start > /dev/null
