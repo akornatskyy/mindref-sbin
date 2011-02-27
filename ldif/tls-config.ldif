@@ -1,0 +1,10 @@
+dn: cn=config
+add: olcTLSCACertificateFile
+olcTLSCACertificateFile: /etc/ssl/certs/cacert.pem
+-
+add: olcTLSCertificateFile
+olcTLSCertificateFile: /etc/ldap/ssl/ldap.dev.local-cert.pem
+-
+add: olcTLSCertificateKeyFile
+olcTLSCertificateKeyFile: /etc/ldap/ssl/ldap.dev.local-key.pem
+
