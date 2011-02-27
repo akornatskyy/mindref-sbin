@@ -1,11 +1,16 @@
-#!/bin/sh
+#!/bin/bash
 
 type=host
 if [ ! -z $1 ]; then type=$1; fi
 
-sh -c "`cat /etc/hostname | xargs -t -I {} echo \
-"kadmin -p admin -q \\\"addprinc -randkey $type/{}\\\""`"
+read -s -p "Password for admin: " passwd; echo
+host=`hostname -f`
 
-sh -c "`cat /etc/hostname | xargs -t -I {} echo \
-"kadmin -p admin -q \\\"ktadd $type/{}\\\""`"
+if [ -z `kadmin -p admin -w $passwd -q "listprincs" | grep $type/$host` ]; then
+    kadmin -p admin -w $passwd -q "addprinc -randkey $type/$host"
+fi
+
+if [ ! -f /etc/krb5.keytab -o -z "`klist -ke | grep $type/$host`" ]; then
+    kadmin -p admin -w $passwd -q "ktadd $type/$host"
+fi
 
