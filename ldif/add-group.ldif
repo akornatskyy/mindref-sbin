@@ -1,0 +1,6 @@
+dn: cn=jsmith,ou=groups,dc=dev,dc=local
+cn: jsmith
+objectClass: top
+objectClass: posixGroup
+gidNumber: 10000
+

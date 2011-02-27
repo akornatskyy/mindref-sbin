@@ -1,0 +1,3 @@
+#!/bin/sh
+
+ldapmodify -QY EXTERNAL -H ldapi:/// -f $1

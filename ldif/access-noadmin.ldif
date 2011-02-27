@@ -1,0 +1,17 @@
+dn: olcDatabase={1}hdb,cn=config
+changetype: modify
+#
+# Revoke admin write rights to the directory
+delete: olcAccess
+olcAccess: {3}to *
+  by self write
+  by dn="cn=admin,dc=dev,dc=local" write
+  by * read
+-
+# Move admin account to people unit
+replace: olcRootDN
+olcRootDN: uid=admin,ou=people,dc=dev,dc=local
+-
+# Remove admin password
+delete: olcRootPW
+

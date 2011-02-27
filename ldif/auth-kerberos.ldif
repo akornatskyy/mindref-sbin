@@ -1,0 +1,13 @@
+dn: cn=config
+changetype: modify
+#
+# Regular expression that match a simple user name
+# provided by SASL and map it to ldap entry
+add: olcAuthzRegexp
+olcAuthzRegexp: uid=([^,]+),cn=dev.local,cn=gssapi,cn=auth
+  uid=$1,ou=people,dc=dev,dc=local
+-
+# Specify SASL Kerberos realm
+add: olcSaslRealm
+olcSaslRealm: DEV.LOCAL
+

@@ -1,0 +1,23 @@
+dn: olcDatabase={1}hdb,cn=config
+changetype: modify
+#
+# Delete default user access to password
+delete: olcAccess
+olcAccess: {0}to attrs=userPassword,shadowLastChange
+  by self write
+  by anonymous auth
+  by dn="cn=admin,dc=dev,dc=local" write
+  by * none
+-
+# Prohibit access to password
+add: olcAccess
+olcAccess: {0}to attrs=userPassword,shadowLastChange
+  by * none
+-
+# Only authenticated users have read access 
+# Anonymous users have no access. 
+add: olcAccess
+olcAccess: {1}to *
+  by users read
+  by * none
+
