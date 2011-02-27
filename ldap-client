@@ -1,0 +1,81 @@
+#!/bin/bash
+
+#if [ "`dpkg -s libnss-ldap 2>/dev/null | grep 'ok installed'`" ]; then
+#    exit 0
+#fi
+
+ldap_server='ldaps://ldap.dev.local/'
+base_dn=dc='dev,dc=local'
+root_bind_dn='cn=admin,ou=people,dc=dev,dc=local'
+cacert_url='http://ca.dev.local/cacert.pem'
+
+cat <<EOF | debconf-set-selections
+libpam-ldap shared/ldapns/ldap-server string $ldap_server   
+libpam-ldap shared/ldapns/base-dn string $base_dn
+libpam-ldap shared/ldapns/ldap_version select 3
+libpam-ldap libpam-ldap/rootbinddn string $root_bind_dn 
+libpam-ldap libpam-ldap/rootbindpw password 
+libpam-ldap libpam-ldap/dbrootlogin boolean false
+libpam-ldap libpam-ldap/dblogin boolean false
+libpam-ldap libpam-ldap/pam_password select crypt
+libnss-ldap libnss-ldap/rootbindpw password 
+libnss-ldap libnss-ldap/dblogin boolean false
+libnss-ldap libnss-ldap/nsswitch note 
+libnss-ldap libnss-ldap/confperm boolean false
+libnss-ldap libnss-ldap/dbrootlogin select true
+libnss-ldap libnss-ldap/rootbinddn select $root_bind_dn
+EOF
+
+apt-get -y install ldap-utils libpam-ldap openssl \
+    libsasl2-modules-gssapi-mit nscd libnss-ldap kstart
+
+echo "libpam-runtime libpam-runtime/profiles multiselect krb5, unix" \
+   | debconf-set-selections
+
+dpkg-reconfigure -u libpam-runtime
+dpkg-reconfigure -u libpam-ldap
+dpkg-reconfigure -u libnss-ldap
+
+# It will check every 10 minutes of the Kerberos ticket 
+# needs to be renewed and set the ticket lifetime to 24 hours
+cat <<EOF >> /etc/inittab
+KS:2345:respawn:/usr/bin/k5start -U -f /etc/krb5.keytab -K 10 -l 24h
+EOF
+
+# Force init to reload configuration
+kill -HUP 1
+
+# Kerberise libnss-ldap
+cat <<EOF >> /etc/libnss-ldap.conf
+# Use SASL and GSSAPI and where to find the 
+# Kerberos ticket cache.
+use_sasl        on
+sasl_mech       gssapi
+krb5_ccname FILE:/tmp/krb5cc_0
+EOF
+
+wget $cacert_url -O /etc/ssl/certs/cacert.pem 
+
+# Set defaults for LDAP clients
+cat <<EOF >> /etc/ldap/ldap.conf
+BASE    $base_dn
+URI     $ldap_server
+
+TLS_CACERT /etc/ssl/certs/cacert.pem
+TLS_REQCERT demand
+
+SASL_MECH GSSAPI
+EOF
+
+# Add LDAP support for login process by nscd
+sed -e 's/compat/compat ldap/g' /etc/nsswitch.conf > /tmp/x \
+    && mv /tmp/x /etc/nsswitch.conf
+
+# Configure PAM to automatically create a user home directory
+cat <<EOF >> /etc/pam.d/common-session
+session  required  pam_mkhomedir.so
+EOF
+
+# Restart Name Service Cache daemon
+/etc/init.d/nscd restart
+
