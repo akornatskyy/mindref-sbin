@@ -1,0 +1,25 @@
+#!/bin/bash
+
+if [ -z "`dpkg -s krb5-user 2>/dev/null | grep 'ok installed'`" ]; then
+    apt-get -y install krb5-user
+fi
+
+if [ -z "`dpkg -s libpam-krb5 2>/dev/null | grep 'ok installed'`" ]; then
+    apt-get -y install libpam-krb5
+fi
+
+krb_conf=/etc/krb5.conf
+declare `sed -n '/default_realm/p' $krb_conf | sed -e 's,\s,,g'`
+
+if [ -z "`cat $krb_conf | grep "$default_realm\s*="`" ]; then
+    domain_name=`hostname -d`
+    exp="\t$default_realm = {\n\
+\t\t\# The entries below can be commented out\n\
+\t\t\# in case there is dns resolution\n\
+\t\tkdc = kdc.$domain_name\n\
+\t\tadmin_server = krb.$domain_name\n\
+\t}\n\
+\n\
+[domain_realm]"
+    sed -e 's/\[domain_realm\]/'"$exp"'/' $krb_conf > /tmp/x && mv /tmp/x $krb_conf
+fi
