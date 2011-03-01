@@ -1,0 +1,35 @@
+#!/bin/sh
+
+apt-get install psmisc
+killall -s 3 exim4
+
+apt-get -y purge exim4-config
+
+host=`hostname -f`
+domain=`hostname -d`
+mail=$(host -t MX $domain | xargs -n1 | grep \\.$)
+mail=${mail%\.}
+
+cat <<EOF | debconf-set-selections
+exim4-config exim4/dc_relay_nets string 
+exim4-config exim4/mailname string $host
+exim4-config exim4/dc_readhost string $domain
+exim4-config exim4/dc_other_hostnames string 
+exim4-config exim4/dc_eximconfig_configtype select mail sent by smarthost; no local mail
+exim4-config exim4/use_split_config boolean false
+exim4-config exim4/dc_localdelivery select mbox format in /var/mail/
+exim4-config exim4/no_config boolean true
+exim4-config exim4/hide_mailname boolean true
+exim4-config exim4/dc_postmaster string master@$domain
+exim4-config exim4/dc_local_interfaces string 127.0.0.1
+exim4-config exim4/dc_smarthost string $mail
+exim4-config exim4/dc_relay_domains string 
+exim4-config exim4/dc_minimaldns boolean false
+EOF
+
+apt-get -y install exim4
+dpkg-reconfigure -u exim4-config
+
+if [ -f /var/log/exim4/paniclog ]; then rm /var/log/exim4/paniclog; fi
+/etc/init.d/exim4 restart
+tail /var/log/exim4/mainlog

@@ -32,7 +32,7 @@ apt-get -y install ldap-utils libpam-ldap openssl \
 echo "libpam-runtime libpam-runtime/profiles multiselect krb5, unix" \
    | debconf-set-selections
 
-dpkg-reconfigure -u libpam-runtime
+dpkg-reconfigure libpam-runtime
 dpkg-reconfigure -u libpam-ldap
 dpkg-reconfigure -u libnss-ldap
 
