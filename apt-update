@@ -1,7 +1,23 @@
 #!/bin/sh
 
+#mailto=
+mailto='debian-updates@dev.local'
+
 # Download only; package files are only retrieved, not unpacked or
 # installed.
 apt-get -dqq update
 apt-get -dyqq upgrade
+
+if [ -z $mailto ]; then
+    #echo "Mail disabled."
+    exit 0
+fi
+
+has_upgrades=$(apt-get -s upgrade | grep ^Inst)
+if [ "$has_upgrades" ] ; then
+    #echo "Sending updates report."
+    echo "$has_upgrades" | mail -s \
+        "Updates for $(hostname) on $(date +%Y-%m-%d)" \
+        $mailto
+fi
 
