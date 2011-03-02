@@ -1,0 +1,36 @@
+#!/bin/bash
+
+if [ ! -f /etc/ssl/certs/cacert.pem ]; then
+    echo "CA certificate not installed"
+    exit 1
+fi
+
+if [ -z "`dpkg -s libnss3-tools 2>/dev/null | grep 'ok installed'`" ]; then
+    apt-get -y install libnss3-tools
+fi
+
+nssdb=$HOME/.pki/nssdb
+if [ ! -e $nssdb ]; then
+    echo "NSS Certificate DB not found, creating..."
+    mkdir -p $nssdb ; certutil -N -d sql:$nssdb
+fi
+
+# Evolution email client
+domain=`hostname -d`
+certutil -d sql:$nssdb -A -t "CT,c,c" -n $domain \
+    -i /etc/ssl/certs/cacert.pem
+
+# Firefox/Iceweasel web browser
+ff_profile=$HOME/.mozilla/firefox/your-profile
+
+rm $ff_profile/{cert9.db,key4.db}
+ln -s $nssdb/cert9.db $ff_profile/cert9.db
+ln -s $nssdb/key4.db $ff_profile/key4.db
+
+# Thunderbird email client
+tb_profile=$HOME/.thunderbird/your-profile
+
+rm $tb_profile/{cert9.db,key4.db}
+ln -s $nssdb/cert9.db $tb_profile/cert9.db
+ln -s $nssdb/key4.db $tb_profile/key4.db
+
