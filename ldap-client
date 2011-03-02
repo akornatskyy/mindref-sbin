@@ -1,8 +1,8 @@
 #!/bin/bash
 
-#if [ "`dpkg -s libnss-ldap 2>/dev/null | grep 'ok installed'`" ]; then
-#    exit 0
-#fi
+if [ "`dpkg -s libnss-ldap 2>/dev/null | grep 'ok installed'`" ]; then
+    exit 0
+fi
 
 ldap_server='ldaps://ldap.dev.local/'
 base_dn=dc='dev,dc=local'
@@ -41,6 +41,13 @@ dpkg-reconfigure -u libnss-ldap
 cat <<EOF >> /etc/inittab
 KS:2345:respawn:/usr/bin/k5start -U -f /etc/krb5.keytab -K 10 -l 24h
 EOF
+
+# If the network is up, renew ticket
+cat <<EOF > /etc/network/if-up.d/k5start
+#!/bin/sh
+/usr/bin/k5start -U -f /etc/krb5.keytab    
+EOF
+chmod +x /etc/network/if-up.d/k5start
 
 # Force init to reload configuration
 kill -HUP 1
