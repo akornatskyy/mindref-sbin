@@ -1,7 +1,10 @@
-#!/bin/sh
+#!/bin/bash
+. func/random_sleep
 
 #mailto=
 mailto='debian-updates@dev.local'
+
+random_sleep 600 60
 
 # Download only; package files are only retrieved, not unpacked or
 # installed.
