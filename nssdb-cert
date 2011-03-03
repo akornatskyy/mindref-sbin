@@ -6,7 +6,8 @@ if [ ! -f /etc/ssl/certs/cacert.pem ]; then
 fi
 
 if [ -z "`dpkg -s libnss3-tools 2>/dev/null | grep 'ok installed'`" ]; then
-    apt-get -y install libnss3-tools
+    echo "Please install libnss3-tools"
+    exit 1
 fi
 
 nssdb=$HOME/.pki/nssdb
@@ -21,12 +22,16 @@ certutil -d sql:$nssdb -A -t "CT,c,c" -n $domain \
     -i /etc/ssl/certs/cacert.pem
 
 # Firefox/Iceweasel web browser
-ff_profile=$HOME/.mozilla/firefox/your-profile
+if [ -e $HOME/.mozilla/firefox/profiles.ini ]; then
+    ff_profile=`sed -n '/Path=/p' $HOME/.mozilla/firefox/profiles.ini | \
+        sed -e 's/Path=//'`
+    ff_profile=$HOME/.mozilla/firefox/$ff_profile
+    rm $ff_profile/{cert9.db,key4.db}
+    ln -s $nssdb/cert9.db $ff_profile/cert9.db
+    ln -s $nssdb/key4.db $ff_profile/key4.db
+fi
 
-rm $ff_profile/{cert9.db,key4.db}
-ln -s $nssdb/cert9.db $ff_profile/cert9.db
-ln -s $nssdb/key4.db $ff_profile/key4.db
-
+exit 0
 # Thunderbird email client
 tb_profile=$HOME/.thunderbird/your-profile
 
