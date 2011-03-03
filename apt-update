@@ -20,7 +20,7 @@ has_upgrades=$(apt-get -s upgrade | grep ^Inst)
 if [ "$has_upgrades" ] ; then
     #echo "Sending updates report."
     echo "$has_upgrades" | mail -s \
-        "Updates for $(hostname) on $(date +%Y-%m-%d)" \
+        "Updates for $(hostname -s) on $(date +%Y-%m-%d)" \
         $mailto
 fi
 
