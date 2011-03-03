@@ -68,6 +68,15 @@ cat <<EOF >> /etc/pam.d/common-session
 session  required  pam_mkhomedir.so
 EOF
 
+if [ -e /etc/init.d/dbus ]; then
+    if [ -z "`cat /etc/init.d/dbus | grep '# Should-Start:\s*nscd'`" ]; then
+        sed -e 's/# Required-Start/# Should-Start:      nscd\n# Required-Start/' \
+            /etc/init.d/dbus > /tmp/x && mv /tmp/x /etc/init.d/dbus
+        # Reconfigure rc dependencies
+        update-rc.d dbus disable && update-rc.d dbus enable
+    fi        
+fi
+
 # Restart Name Service Cache daemon
 /etc/init.d/nscd restart
 

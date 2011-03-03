@@ -1,11 +1,7 @@
 #!/bin/bash
 
 if [ -z "`dpkg -s krb5-user 2>/dev/null | grep 'ok installed'`" ]; then
-    apt-get -y install krb5-user
-fi
-
-if [ -z "`dpkg -s libpam-krb5 2>/dev/null | grep 'ok installed'`" ]; then
-    apt-get -y install libpam-krb5 kstart
+    apt-get -y install krb5-user libpam-krb5 kstart
 fi
 
 krb_conf=/etc/krb5.conf
