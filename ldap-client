@@ -36,22 +36,6 @@ dpkg-reconfigure libpam-runtime
 dpkg-reconfigure -u libpam-ldap
 dpkg-reconfigure -u libnss-ldap
 
-# It will check every 10 minutes of the Kerberos ticket 
-# needs to be renewed and set the ticket lifetime to 24 hours
-cat <<EOF >> /etc/inittab
-KS:2345:respawn:/usr/bin/k5start -U -f /etc/krb5.keytab -K 10 -l 24h
-EOF
-
-# If the network is up, renew ticket
-cat <<EOF > /etc/network/if-up.d/k5start
-#!/bin/sh
-/usr/bin/k5start -U -f /etc/krb5.keytab    
-EOF
-chmod +x /etc/network/if-up.d/k5start
-
-# Force init to reload configuration
-kill -HUP 1
-
 # Kerberise libnss-ldap
 cat <<EOF >> /etc/libnss-ldap.conf
 # Use SASL and GSSAPI and where to find the 

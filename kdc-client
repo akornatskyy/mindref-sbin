@@ -5,7 +5,7 @@ if [ -z "`dpkg -s krb5-user 2>/dev/null | grep 'ok installed'`" ]; then
 fi
 
 if [ -z "`dpkg -s libpam-krb5 2>/dev/null | grep 'ok installed'`" ]; then
-    apt-get -y install libpam-krb5
+    apt-get -y install libpam-krb5 kstart
 fi
 
 krb_conf=/etc/krb5.conf
@@ -23,3 +23,28 @@ if [ -z "`cat $krb_conf | grep "$default_realm\s*="`" ]; then
 [domain_realm]"
     sed -e 's/\[domain_realm\]/'"$exp"'/' $krb_conf > /tmp/x && mv /tmp/x $krb_conf
 fi
+
+if [ -z "`cat /etc/inittab | grep k5start`" ]; then
+    # It will check every 10 minutes of the Kerberos ticket 
+    # needs to be renewed and set the ticket lifetime to 24 hours
+    cat <<EOF >> /etc/inittab
+KS:2345:respawn:/usr/bin/k5start -U -f /etc/krb5.keytab -K 10 -l 24h
+EOF
+
+    # Force init to reload configuration
+    kill -HUP 1
+fi
+
+# If the network is up, renew ticket
+cat <<EOF > /etc/network/if-up.d/k5start
+#!/bin/sh
+while true; do
+    /usr/bin/k5start -U -f /etc/krb5.keytab
+    if [ $? -eq 0 ]; then
+        break;
+    fi  
+    sleep 5
+done
+EOF
+chmod +x /etc/network/if-up.d/k5start
+
