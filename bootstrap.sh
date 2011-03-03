@@ -18,7 +18,7 @@ cat <<EOF > ~/.hgrc
 [hostfingerprints]
 bitbucket.org = 81:2b:08:90:dc:d3:71:ee:e0:7c:b4:75:ce:9b:6c:48:94:56:a1:fe
 [ui]
-username = Firstname Lastname <user@email.com>
+#username = Firstname Lastname <user@email.com>
 EOF
 
 # Grab settings
