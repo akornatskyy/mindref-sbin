@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# 
+# random_sleep shift_max rnd_max
+#
+# shift_max - a number to generate consistent "random"
+# number.
+# rnd_max - a random number to add
+random_sleep()
+{
+    shift_max=600
+    if [ ! -z $1 ]; then shift_max=$1; fi
+
+    rnd_max=60
+    if [ ! -z $2 ]; then rnd_max=$2; fi
+
+    # shift is a number betweem 0 and 600
+    shift=`ifconfig eth0 | grep HWaddr | \
+        sed -e 's/.*HWaddr //' | tr -d ':'`
+    shift=$((0x$shift%$shift_max))
+
+    # Sleep a random amount of time + shift
+    sleep_time=$(($RANDOM % $rnd_max + $shift))
+
+    echo "Sleeping for $sleep_time seconds..."
+    /bin/sleep $sleep_time
+}
+
