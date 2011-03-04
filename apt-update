@@ -1,5 +1,5 @@
 #!/bin/bash
-. func/random_sleep
+. `dirname $_`/func/random_sleep
 
 #mailto=
 mailto='debian-updates@dev.local'
