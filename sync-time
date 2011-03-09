@@ -1,5 +1,5 @@
 #!/bin/bash
-. `dirname $_`/func/random_sleep
+. /usr/local/sbin/func/random_sleep
 
 server=pool.ntp.org
 
