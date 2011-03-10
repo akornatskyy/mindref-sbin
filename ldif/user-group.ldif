@@ -1,0 +1,5 @@
+dn: cn=sshusers,ou=groups,dc=dev,dc=local
+changetype: modify
+add: memberUid
+#delete: memberUid
+memberUid: jsmith
