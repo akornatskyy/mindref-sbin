@@ -15,8 +15,8 @@ random_sleep()
     if [ ! -z $2 ]; then rnd_max=$2; fi
 
     # shift is a number betweem 0 and 600
-    shift=`ifconfig eth0 | grep HWaddr | \
-        sed -e 's/.*HWaddr //' | tr -d ':'`
+    shift=`/sbin/ifconfig eth0 | /bin/grep HWaddr | \
+        /bin/sed -e 's/.*HWaddr //' | /usr/bin/tr -d ':'`
     shift=$((0x$shift%$shift_max))
 
     # Sleep a random amount of time + shift
