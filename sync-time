@@ -5,9 +5,6 @@ server=pool.ntp.org
 
 random_sleep 600 120
 
-echo "Sleeping for $sleep_time seconds..."
-/bin/sleep $sleep_time
-
 # Sync the time with external server
 echo "Sync time with $server."
 /usr/sbin/ntpdate -s $server || exit 1
