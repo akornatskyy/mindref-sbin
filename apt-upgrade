@@ -12,10 +12,10 @@ if [ -z "$upgrades" ] ; then
 fi
     
 if [ -z $mailto ]; then
-    apt-get -yqq dist-upgrade
+    apt-get -yqq dist-upgrade 2>&1
 else
-    upgrades=`apt-get -yq dist-upgrade | grep ^Setting \
-        | sed -e 's/Setting up //g' -e 's/ \.\.\.\r//g'`
+    upgrades=`apt-get -yq dist-upgrade 2>&1 | grep ^Setting \
+        | sed -e 's/Setting up //g' -e 's/ \.\.\.//g' -e 's/\r//g'` 
     echo "$upgrades" | mail -s \
         "Upgraded $(hostname -s) on $(date +%Y-%m-%d)" \
         $mailto 
