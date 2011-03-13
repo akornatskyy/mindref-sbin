@@ -16,7 +16,7 @@ if [ -z $mailto ]; then
     exit 0
 fi
 
-has_upgrades=$(apt-get -s dist-upgrade | grep ^Inst)
+has_upgrades=$(apt-get -s dist-upgrade | grep ^Inst | sed 's/Inst //g')
 if [ "$has_upgrades" ] ; then
     #echo "Sending updates report."
     echo "$has_upgrades" | mail -s \

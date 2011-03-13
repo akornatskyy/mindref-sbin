@@ -1,0 +1,24 @@
+#!/bin/bash
+. /usr/local/sbin/func/random_sleep
+
+#mailto=
+mailto='debian-updates@dev.local'
+
+random_sleep 600 30
+
+upgrades=$(apt-get -ysq dist-upgrade | grep ^Inst)
+if [ -z "$upgrades" ] ; then
+    exit 0
+fi
+    
+if [ -z $mailto ]; then
+    apt-get -yqq dist-upgrade
+else
+    upgrades=`apt-get -yq dist-upgrade | grep ^Setting \
+        | sed -e 's/Setting up //g' -e 's/ \.\.\.\r//g'`
+    echo "$upgrades" | mail -s \
+        "Upgraded $(hostname -s) on $(date +%Y-%m-%d)" \
+        $mailto 
+fi
+
+apt-get clean
