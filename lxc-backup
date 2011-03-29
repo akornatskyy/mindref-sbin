@@ -1,0 +1,47 @@
+#!/bin/bash
+
+BACKUPDIR=/var/backups/daily/lxc
+
+TIMESTAMP=`date +%Y-%m-%d`
+if [ -f /etc/default/lxc ] ; then
+    . /etc/default/lxc
+fi
+
+do_backup()
+{
+    rootfs=$1/rootfs
+
+    EXCLUDE="\
+--exclude=$rootfs/usr/local/etc/* \
+--exclude=$rootfs/usr/local/sbin/* \
+--exclude=$rootfs/tmp/* \
+--exclude=$rootfs/var/cache/apt/archives/* \
+--exclude=$rootfs/var/cache/man/* \
+--exclude=$rootfs/var/run/* \
+--exclude=$rootfs/var/tmp/* \
+--exclude=$rootfs/var/lock/* \
+--exclude=$rootfs/var/mail/* \
+--exclude=$rootfs/var/lib/scm/*"
+
+    /bin/tar czfp $BACKUPDIR/$1-$TIMESTAMP.tgz -C /var/lib/lxc $1/ $EXCLUDE --ignore-failed-read 2> /dev/null
+}
+
+if [ ! -e $BACKUPDIR ]; then
+    mkdir -p $BACKUPDIR
+fi
+
+for c in $CONTAINERS; do
+    echo -n "$c: halting... "
+    /usr/local/sbin/lxc-halt $c
+  
+    echo -n "backup... "
+    do_backup $c
+
+    echo -n "starting... "
+    /usr/bin/lxc-start -n $c -f /etc/lxc/$c.conf -d
+
+    # Let container start
+    sleep 2
+    echo "done."
+done
+
