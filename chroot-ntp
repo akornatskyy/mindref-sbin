@@ -1,0 +1,9 @@
+#!/bin/bash
+
+/etc/init.d/ntp stop
+mkdir -p /var/chroot/ntp/{etc,var/run}
+chown -R ntp:ntp /var/chroot/ntp/var/run
+
+mv /etc/ntp.conf /var/chroot/ntp/etc
+ln -s /var/chroot/ntp/etc/ntp.conf /etc/ntp.conf
+
