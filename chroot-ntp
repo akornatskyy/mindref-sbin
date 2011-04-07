@@ -1,9 +1,11 @@
 #!/bin/bash
 
 /etc/init.d/ntp stop
-mkdir -p /var/chroot/ntp/{etc,var/run}
-chown -R ntp:ntp /var/chroot/ntp/var/run
+mkdir -p /var/chroot/ntp/etc
 
 mv /etc/ntp.conf /var/chroot/ntp/etc
 ln -s /var/chroot/ntp/etc/ntp.conf /etc/ntp.conf
 
+sed -e "s,'-g','-4 -i /var/chroot/ntp -g'," /etc/default/ntp > /tmp/x && mv /tmp/x /etc/default/ntp
+
+/etc/init.d/ntp start
