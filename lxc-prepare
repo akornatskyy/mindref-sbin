@@ -75,7 +75,12 @@ c2:12345:respawn:/sbin/getty 38400 tty2 linux
 EOF
 
     cat <<EOF >> $rootfs/etc/apt/sources.list
+ 
+deb http://ftp.debian.org/debian/ $release main contrib non-free
+deb-src http://ftp.debian.org/debian/ $release main contrib non-free
+
 deb http://security.debian.org/ $release/updates main
+deb-src http://security.debian.org/ $release/updates main
 EOF
 
     cat <<EOF > $rootfs/etc/network/interfaces
@@ -91,7 +96,8 @@ EOF
         domain=.$domain
     fi
     cat <<EOF > $rootfs/etc/hostname
-$hostname$domain
+$hostname
+#$hostname$domain
 EOF
 
     cat <<EOF >> $rootfs/etc/dhcp/dhclient.conf
@@ -99,7 +105,7 @@ send host-name "$hostname";
 EOF
 
     cat <<EOF > $rootfs/etc/hosts
-127.0.0.1   localhost   $hostname
+127.0.0.1   localhost
 EOF
 
     cat <<EOF > $rootfs/etc/locale.gen
