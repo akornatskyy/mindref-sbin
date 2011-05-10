@@ -2,6 +2,9 @@
 
 chown -R Debian-exim:Debian-exim /var/spool/exim4
 chown -R Debian-exim /var/log/exim4
+chgrp Debian-exim /etc/exim4/exim.crt \
+    /etc/exim4/exim.key /etc/exim4/passwd.client
+
 rm /var/log/exim4/paniclog
 /etc/init.d/exim4 restart
 
