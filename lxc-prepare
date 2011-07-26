@@ -74,7 +74,7 @@ c1:12345:respawn:/sbin/getty 38400 tty1 linux
 c2:12345:respawn:/sbin/getty 38400 tty2 linux
 EOF
 
-    cat <<EOF >> $rootfs/etc/apt/sources.list
+    cat <<EOF > $rootfs/etc/apt/sources.list
  
 deb http://ftp.debian.org/debian/ $release main contrib non-free
 deb-src http://ftp.debian.org/debian/ $release main contrib non-free
@@ -97,7 +97,6 @@ EOF
     fi
     cat <<EOF > $rootfs/etc/hostname
 $hostname
-#$hostname$domain
 EOF
 
     cat <<EOF >> $rootfs/etc/dhcp/dhclient.conf
