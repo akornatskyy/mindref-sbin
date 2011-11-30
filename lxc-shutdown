@@ -1,0 +1,29 @@
+#!/bin/sh
+
+name=$1
+timeout=15
+
+if lxc-info -n $name | grep -qs "STOPPED"
+then
+    echo $name not running...
+    exit 0
+fi
+
+if [ -e /usr/bin/lxc-halt ]; then
+    echo lxc-halt
+    /usr/bin/lxc-halt $name
+else
+    ssh $name halt &
+fi
+
+while [ $timeout -gt 0 ]
+do
+    timeout=$(($timeout-1));sleep 1
+    if lxc-info -n $name | grep -qs "STOPPED"
+    then
+        exit 0
+    fi
+done
+
+lxc-stop -n $name
+lxc-wait -n $name -s 'STOPPED'
