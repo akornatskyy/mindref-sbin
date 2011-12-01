@@ -10,7 +10,6 @@ then
 fi
 
 if [ -e /usr/bin/lxc-halt ]; then
-    echo lxc-halt
     /usr/bin/lxc-halt $name
 else
     ssh $name halt &
