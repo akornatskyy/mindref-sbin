@@ -21,7 +21,8 @@ do_backup()
 --exclude=$rootfs/var/tmp/* \
 --exclude=$rootfs/var/lock/* \
 --exclude=$rootfs/var/mail/* \
---exclude=$rootfs/var/lib/scm/*"
+--exclude=$rootfs/var/lib/scm/* \
+--exclude=$rootfs/srv/sftp/*"
 
     /bin/tar czfp $BACKUPDIR/$1-$TIMESTAMP.tgz -C /var/lib/lxc $1/ $EXCLUDE --ignore-failed-read 2> /dev/null
 }
@@ -33,7 +34,7 @@ fi
 for c in $CONTAINERS; do
     echo -n "$c: halting... "
     /usr/local/sbin/lxc-halt $c
-  
+
     echo -n "backup... "
     do_backup $c
 
