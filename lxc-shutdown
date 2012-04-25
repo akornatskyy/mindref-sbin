@@ -9,11 +9,20 @@ then
     exit 0
 fi
 
-if [ -e /usr/bin/lxc-halt ]; then
-    /usr/bin/lxc-halt -n $name
-else
-    ssh $name halt &
-fi
+# Use the following two commands to override lxc-shutdown for lxc
+# v0.8+
+#
+# update-alternatives --install /usr/bin/lxc-shutdown \
+#   lxc-shutdown /usr/local/sbin/lxc-shutdown 1
+# update-alternatives --set lxc-shutdown \
+#   /usr/local/sbin/lxc-shutdown
+
+ssh $name halt &
+#if [ -e /usr/bin/lxc-halt ]; then
+#    /usr/bin/lxc-halt -n $name
+#else
+#    ssh $name halt &
+#fi
 
 while [ $timeout -gt 0 ]
 do
