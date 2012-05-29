@@ -14,4 +14,12 @@ olcDbIndex: ou eq
 -
 add: olcDbIndex
 olcDbIndex: dc eq
-
+-
+add: olcDbIndex
+olcDbIndex: uniqueMember eq
+-
+add: olcDbIndex
+olcDbIndex: uidNumber eq
+-
+add: olcDbIndex
+olcDbIndex: gidNumber eq
